@@ -19,8 +19,11 @@ function executeResult($sql) {
 	//insert, update, delete
 	$result = mysqli_query($con, $sql);
 	$data   = [];
-	while ($row = mysqli_fetch_array($result, 1)) {
-		$data[] = $row;
+
+	if ($result != null) {
+		while ($row = mysqli_fetch_array($result, 1)) {
+			$data[] = $row;
+		}
 	}
 
 	//close connection
