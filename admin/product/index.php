@@ -1,5 +1,6 @@
 <?php
 require_once ('../../db/dbhelper.php');
+require_once ('../../common/utility.php');
 ?>
 <!DOCTYPE html>
 <html>
@@ -52,13 +53,31 @@ require_once ('../../db/dbhelper.php');
 					<tbody>
 <?php
 //Lay danh sach danh muc tu database
-$sql         = 'select product.id, product.title, product.price, product.thumbnail, product.updated_at, category.name category_name from product left join category on product.id_category = category.id';
+$limit = 1;
+$page  = 1;
+if (isset($_GET['page'])) {
+	$page = $_GET['page'];
+}
+if ($page <= 0) {
+	$page = 1;
+}
+$firstIndex = ($page-1)*$limit;
+
+$sql         = 'select product.id, product.title, product.price, product.thumbnail, product.updated_at, category.name category_name from product left join category on product.id_category = category.id '.' limit '.$firstIndex.', '.$limit;
 $productList = executeResult($sql);
+
+$sql         = 'select count(id) as total from product where 1 ';
+$countResult = executeSingleResult($sql);
+$number      = 0;
+if ($countResult != null) {
+	$count  = $countResult['total'];
+	$number = ceil($count/$limit);
+}
 
 $index = 1;
 foreach ($productList as $item) {
 	echo '<tr>
-				<td>'.($index++).'</td>
+				<td>'.(++$firstIndex).'</td>
 				<td><img src="'.$item['thumbnail'].'" style="max-width: 100px"/></td>
 				<td>'.$item['title'].'</td>
 				<td>'.$item['price'].'</td>
@@ -73,8 +92,10 @@ foreach ($productList as $item) {
 			</tr>';
 }
 ?>
-					</tbody>
+</tbody>
 				</table>
+				<!-- Bai toan phan trang -->
+<?=paginarion($number, $page, '')?>
 			</div>
 		</div>
 	</div>

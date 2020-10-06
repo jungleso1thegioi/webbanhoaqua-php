@@ -1,5 +1,6 @@
 <?php
 require_once ('../../db/dbhelper.php');
+require_once ('../../common/utility.php');
 ?>
 <!DOCTYPE html>
 <html>
@@ -33,9 +34,20 @@ require_once ('../../db/dbhelper.php');
 				<h2 class="text-center">Quản Lý Danh Mục</h2>
 			</div>
 			<div class="panel-body">
-				<a href="add.php">
-					<button class="btn btn-success" style="margin-bottom: 15px;">Thêm Danh Mục</button>
-				</a>
+				<div class="row">
+					<div class="col-lg-6">
+						<a href="add.php">
+							<button class="btn btn-success" style="margin-bottom: 15px;">Thêm Danh Mục</button>
+						</a>
+					</div>
+					<div class="col-lg-6">
+						<form method="get">
+						  <div class="form-group" style="width: 200px; float: right;">
+						    <input type="text" class="form-control" placeholder="Searching..." id="s" name="s">
+						  </div>
+						</form>
+					</div>
+				</div>
 				<table class="table table-bordered table-hover">
 					<thead>
 						<tr>
@@ -48,13 +60,42 @@ require_once ('../../db/dbhelper.php');
 					<tbody>
 <?php
 //Lay danh sach danh muc tu database
-$sql          = 'select * from category';
+$limit = 3;
+$page  = 1;
+if (isset($_GET['page'])) {
+	$page = $_GET['page'];
+}
+if ($page <= 0) {
+	$page = 1;
+}
+$firstIndex = ($page-1)*$limit;
+
+$s = '';
+if (isset($_GET['s'])) {
+	$s = $_GET['s'];
+}
+
+//trang can lay san pham, so phan tu tren 1 trang: $limit
+$additional = '';
+
+if (!empty($s)) {
+	$additional = ' and name like "%'.$s.'%" ';
+}
+$sql = 'select * from category where 1 '.$additional.' limit '.$firstIndex.', '.$limit;
+
 $categoryList = executeResult($sql);
 
-$index = 1;
+$sql         = 'select count(id) as total from category where 1 '.$additional;
+$countResult = executeSingleResult($sql);
+$number      = 0;
+if ($countResult != null) {
+	$count  = $countResult['total'];
+	$number = ceil($count/$limit);
+}
+
 foreach ($categoryList as $item) {
 	echo '<tr>
-				<td>'.($index++).'</td>
+				<td>'.(++$firstIndex).'</td>
 				<td>'.$item['name'].'</td>
 				<td>
 					<a href="add.php?id='.$item['id'].'"><button class="btn btn-warning">Sửa</button></a>
@@ -65,8 +106,10 @@ foreach ($categoryList as $item) {
 			</tr>';
 }
 ?>
-					</tbody>
+</tbody>
 				</table>
+				<!-- Bai toan phan trang -->
+<?=paginarion($number, $page, '&s='.$s)?>
 			</div>
 		</div>
 	</div>
